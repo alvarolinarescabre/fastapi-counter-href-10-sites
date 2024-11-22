@@ -5,7 +5,7 @@ from conf.settings import Settings
 from routers import main
 
 settings = Settings()
-app = FastAPI(docs_url="/docs", openapi_prefix="/chamo")
+app = FastAPI(docs_url="/docs")
 app.include_router(main.router)
 
 if __name__ == "__main__":
