@@ -13,7 +13,7 @@ settings = Settings()
 
 @router.get("/")
 async def index():
-    return {"Uses Path": "/chamo/ping | /chamo/counter | /chamo/docs"}
+    return {"Uses Path": "/ping | /counter | /docs"}
 
 
 @router.get("/ping")
