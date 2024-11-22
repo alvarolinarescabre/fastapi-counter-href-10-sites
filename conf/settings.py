@@ -13,7 +13,7 @@ class Settings(BaseSettings):
         "https://www.mozilla.org",
         "https://www.github.com",
         "https://www.google.com",
-        "https://www.python.org"
+        "https://www.holachamo.com"
     ]
     dir_download: str = "/tmp/download/"
     dir_counted: str = "/tmp/counted/"

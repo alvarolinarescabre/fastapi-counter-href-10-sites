@@ -24,7 +24,7 @@ def read_file(filename: str) -> str:
     :param filename:
     :return: Content File
     """
-    with open(filename, 'r') as file:
+    with open(filename, 'r', encoding="utf8", errors='ignore') as file:
         content = file.read()
         return content
 
