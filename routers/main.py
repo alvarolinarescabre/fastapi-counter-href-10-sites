@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter
 from conf.settings import Settings
 from fastapi.encoders import jsonable_encoder
@@ -27,12 +28,17 @@ def counter_tags():
     start = timer()
     create_dir(settings.dir_download)
     create_dir(settings.dir_counted)
+ 
+    if os.path.exists(settings.dir_download) and os.path.exists(settings.dir_counted):
+    
+        for key, page in enumerate(settings.random_website):
+            output[key] = search_tag(settings.dir_counted, download_file(settings.dir_download, page), "href=")
 
-    for key, page in enumerate(settings.random_website):
-        output[key] = search_tag(settings.dir_counted, download_file(settings.dir_download, page), "href=")
-
-    delete_dir(settings.dir_download)
-    delete_dir(settings.dir_counted)
+        delete_dir(settings.dir_download)
+        delete_dir(settings.dir_counted)
+    else:
+        create_dir(settings.dir_download)
+        create_dir(settings.dir_counted)
 
     end = timer()
     output[10] = f"The Execution Time take: {round(end - start, 2)} seconds"
