@@ -1,4 +1,4 @@
 fastapi[all]
-pydantic-settings
+pydantic_settings
 uvicorn
 requests
