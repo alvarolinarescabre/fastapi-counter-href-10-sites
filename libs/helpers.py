@@ -10,16 +10,17 @@ async def fetch(session, url):
         return await response.text()
 
 
-def search_tag(data: str, tag: str) -> str:
+def search_tag(data: str, pattern: str) -> int:
     """
     Search the specific tag from file
-    :param tag:
+    :param data: str
+    :param pattern: str
     :return: String with matching tags
     """
     count_word = 0
 
-    for match in re.findall(tag, data):
-        if match == tag:
+    for match in re.findall(pattern, data):
+        if match:
             count_word += 1
 
     return count_word
@@ -33,4 +34,4 @@ async def return_results(url):
     async with aiohttp.ClientSession() as session:
         html = await fetch(session, url)
 
-        return search_tag(html, "href")
+        return search_tag(html, settings.pattern)

@@ -14,24 +14,23 @@ async def index():
     return {"Uses Path": "/v1/tags | /docs | /healthcheck"}
 
 @router.get("/v1/tags")
-def get_tags():
+async def get_tags():
     """
-    Get tags from file
-    :return: JSON with tags
+    Get pattern https://|https://
+    :return: JSON with results
     """
 
     start = timer()
     content = []
 
     for id, url in enumerate(settings.urls):
-        result = asyncio.run(return_results(url))
+        result = await return_results(url)
 
         if result:
             content.append(
                 {
                     "id": id,
                     "url": url,
-                    "tag": settings.tag,
                     "result": result,
                 })
         else:
@@ -39,7 +38,6 @@ def get_tags():
                 {
                     "id": id,
                     "url": url,
-                    "tag": settings.tag,
                     "result": None,
                 })
 
