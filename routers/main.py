@@ -1,11 +1,10 @@
-import requests
-from io import StringIO
+import asyncio
 from timeit import default_timer as timer
 from fastapi import APIRouter
 from conf.settings import Settings
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from libs.helpers import search_tag
+from libs.helpers import return_results
 
 router = APIRouter()
 settings = Settings()
@@ -15,20 +14,18 @@ async def index():
     return {"Uses Path": "/v1/tags | /docs | /healthcheck"}
 
 @router.get("/v1/tags")
-async def get_tags():
+def get_tags():
     """
     Get tags from file
     :return: JSON with tags
     """
+
     start = timer()
     content = []
-    
+
     for id, url in enumerate(settings.urls):
-        data = requests.get(url).text
-        result = search_tag(data, settings.tag)
-        
-        end = timer()
-        
+        result = asyncio.run(return_results(url))
+
         if result:
             content.append(
                 {
@@ -36,7 +33,6 @@ async def get_tags():
                     "url": url,
                     "tag": settings.tag,
                     "result": result,
-                    "time": end - start
                 })
         else:
             content.append(
@@ -45,17 +41,19 @@ async def get_tags():
                     "url": url,
                     "tag": settings.tag,
                     "result": None,
-                    "time": end - start
                 })
 
+    end = timer()
+
     return JSONResponse(
-            jsonable_encoder(
-                {
-                    "data": content,
-                }
-            )
-        ) 
-        
+        jsonable_encoder(
+            {
+                "data": content,
+                "time": end - start
+            }
+        )
+    )
+
 @router.get("/healthcheck")
 async def healthcheck():
     """
