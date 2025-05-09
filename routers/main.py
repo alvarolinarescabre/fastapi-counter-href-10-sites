@@ -100,7 +100,7 @@ async def get_tag(url_id: int = Path(...)):
         return JSONResponse(
             jsonable_encoder(
                 {
-                    "data": "id must be 0 > to < 9",
+                    "data": "id must be between 0 and 9",
                 }
             )
         )
