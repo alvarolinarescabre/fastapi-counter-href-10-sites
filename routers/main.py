@@ -1,5 +1,5 @@
 from timeit import default_timer as timer
-from fastapi import APIRouter, Path, FastAPI
+from fastapi import APIRouter, Path
 from conf.settings import Settings
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
@@ -28,20 +28,20 @@ async def get_tags():
     start = timer()
     content = []
 
-    for id, url in enumerate(settings.urls):
+    for url_id, url in enumerate(settings.urls):
         result = await results(url)
 
         if result:
             content.append(
                 {
-                    "id": id,
+                    "id": url_id,
                     "url": url,
                     "result": result,
                 })
         else:
             content.append(
                 {
-                    "id": id,
+                    "id": url_id,
                     "url": url,
                     "result": None,
                 })
