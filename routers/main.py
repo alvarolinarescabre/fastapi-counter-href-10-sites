@@ -57,8 +57,8 @@ async def get_tags():
         )
     )
 
-@router.get("/v1/tags/{id}")
-async def get_tag(id: int = Path(...)):
+@router.get("/v1/tags/{url_id}")
+async def get_tag(url_id: int = Path(...)):
     """
     Get pattern https?://
     :return: JSON with results
@@ -68,20 +68,20 @@ async def get_tag(id: int = Path(...)):
     content = []
 
     try:
-        url = settings.urls[id]
+        url = settings.urls[url_id]
         result = await results(url)
 
         if result:
             content.append(
                 {
-                    "id": id,
+                    "id": url_id,
                     "url": url,
                     "result": result,
                 })
         else:
             content.append(
                 {
-                    "id": id,
+                    "id": url_id,
                     "url": url,
                     "result": None,
                 })

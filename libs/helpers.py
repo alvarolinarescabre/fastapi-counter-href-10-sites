@@ -1,6 +1,5 @@
 import re
 import aiohttp
-import requests
 
 from conf.settings import Settings
 
