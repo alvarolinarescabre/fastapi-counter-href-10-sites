@@ -16,7 +16,7 @@ async def index():
 @router.get("/v1/tags")
 async def get_tags():
     """
-    Get pattern https://|https://
+    Get pattern https?://
     :return: JSON with results
     """
 

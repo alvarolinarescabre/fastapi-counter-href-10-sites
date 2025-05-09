@@ -9,11 +9,11 @@ class Settings(BaseSettings):
         "https://www.realpython.com",
         "https://www.lapatilla.com",
         "https://www.facebook.com",
-        "https://www.instagram.com",
+        "https://www.gitlab.com",
         "https://www.youtube.com",
         "https://www.mozilla.org",
         "https://www.github.com",
         "https://www.google.com",
     ]
-    pattern: str = r"https://|http://"
+    pattern: str = r"href="
     api_stage: str = os.environ.get("API_STAGE", "")
