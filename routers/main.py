@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from conf.settings import Settings
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from libs.helpers import return_results
+from libs.helpers import results
 
 router = APIRouter()
 settings = Settings()
@@ -24,7 +24,7 @@ async def get_tags():
     content = []
 
     for id, url in enumerate(settings.urls):
-        result = await return_results(url)
+        result = await results(url)
 
         if result:
             content.append(

@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     urls: list = [
-        "https://www.holachamo.com",
+        "https://go.dev",
         "https://www.paradigmadigital.com",
         "https://www.realpython.com",
         "https://www.lapatilla.com",
@@ -15,5 +15,5 @@ class Settings(BaseSettings):
         "https://www.github.com",
         "https://www.google.com",
     ]
-    pattern: str = r"href="
+    pattern: str = r"(http|https)://"
     api_stage: str = os.environ.get("API_STAGE", "")
