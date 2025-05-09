@@ -15,5 +15,5 @@ class Settings(BaseSettings):
         "https://www.github.com",
         "https://www.google.com",
     ]
-    pattern: str = r"(http|https)://"
+    pattern: str = r"href=\"(http|https)://"
     api_stage: str = os.environ.get("API_STAGE", "")

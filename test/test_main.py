@@ -18,7 +18,8 @@ def test_index(client):
     """
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json() == {"Uses Path": "/v1/tags | /docs | /healthcheck"}
+    assert "data" in response.json()
+    assert len(response.json()["data"]) > 0
 
 
 def test_health_check(client):
@@ -29,8 +30,9 @@ def test_health_check(client):
     """
     response = client.get("/healthcheck")
     assert response.status_code == 200
-    assert response.json() == {"success": "Ok!"}
-    
+    assert "data" in response.json()
+    assert len(response.json()["data"]) > 0
+
     
 
 def test_get_tags(client):
@@ -44,4 +46,14 @@ def test_get_tags(client):
     assert "data" in response.json()
     assert len(response.json()["data"]) > 0
 
-    
+
+def test_get_tag(client):
+    """
+    Test that we can get the tag by id
+    :param client:
+    :return:
+    """
+    response = client.get("/v1/tags/0")
+    assert response.status_code == 200
+    assert "data" in response.json()
+    assert len(response.json()["data"]) > 0

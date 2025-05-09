@@ -1,7 +1,6 @@
 import re
 import aiohttp
 import requests
-from bs4 import BeautifulSoup
 
 from conf.settings import Settings
 
@@ -12,12 +11,6 @@ async def fetch(session, url):
     async with session.get(url) as response:
         return await response.text()
 
-def parse(html):
-    soup = BeautifulSoup(html, 'html.parser')
-    links = soup.find_all(href=True)
-
-    return links
-
 def search_tag(data: str, pattern: str) -> int:
     """
     Search the specific tag from file
@@ -27,9 +20,9 @@ def search_tag(data: str, pattern: str) -> int:
     """
     count_word = 0
 
-    for tag in data:
+    for tag in re.findall(pattern, str(data)):
         if tag:
-         count_word += 1
+         count_word += len(tag.split())
 
     return count_word
 
@@ -41,6 +34,5 @@ async def results(url):
     """
     async with aiohttp.ClientSession() as session:
         html = await fetch(session, url)
-        links = parse(html)
 
-        return search_tag(links, settings.pattern)
+        return search_tag(html, settings.pattern)

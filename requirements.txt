@@ -5,4 +5,5 @@ requests
 httpx
 bs4
 aiohttp
+pytest
 
