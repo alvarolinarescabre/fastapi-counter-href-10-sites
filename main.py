@@ -5,7 +5,7 @@ from conf.settings import Settings
 from routers import main
 
 settings = Settings()
-app = FastAPI()
+app = FastAPI(lifespan=main.lifespan)
 app.include_router(main.router)
 
 if __name__ == "__main__":

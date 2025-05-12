@@ -3,12 +3,33 @@ from fastapi import APIRouter, Path
 from conf.settings import Settings
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+
+from contextlib import asynccontextmanager
+from typing import AsyncIterator, Dict, Optional
+from fastapi import FastAPI
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.inmemory import InMemoryBackend
+from fastapi_cache.decorator import cache
+
 from libs.helpers import results
 
 router = APIRouter()
 settings = Settings()
 
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    FastAPICache.init(InMemoryBackend())
+    yield
+
+@cache(namespace="speed", expire=1)
+async def get_ret():
+    global ret
+    ret = ret + 1
+    return ret
+
+
 @router.get("/")
+@cache(namespace="speed", expire=10)
 async def index():
     return JSONResponse(
         jsonable_encoder(
@@ -19,6 +40,7 @@ async def index():
     )
 
 @router.get("/v1/tags")
+@cache(namespace="speed", expire=10)
 async def get_tags():
     """
     Get pattern https?://
@@ -58,6 +80,7 @@ async def get_tags():
     )
 
 @router.get("/v1/tags/{url_id}")
+@cache(namespace="speed", expire=10)
 async def get_tag(url_id: int = Path(...)):
     """
     Get pattern https?://

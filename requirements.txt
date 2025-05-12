@@ -1,4 +1,5 @@
 fastapi[all]
+fastapi_cache2
 pydantic_settings
 uvicorn
 requests
