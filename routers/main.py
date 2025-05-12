@@ -21,13 +21,6 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     FastAPICache.init(InMemoryBackend())
     yield
 
-@cache(namespace="speed", expire=1)
-async def get_ret():
-    global ret
-    ret = ret + 1
-    return ret
-
-
 @router.get("/")
 @cache(namespace="speed", expire=10)
 async def index():
