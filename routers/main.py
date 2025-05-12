@@ -22,7 +22,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     yield
 
 @router.get("/")
-@cache(namespace="speed", expire=10)
+@cache(expire=60)
 async def index():
     return JSONResponse(
         jsonable_encoder(
@@ -33,7 +33,7 @@ async def index():
     )
 
 @router.get("/v1/tags")
-@cache(namespace="speed", expire=10)
+@cache(expire=60)
 async def get_tags():
     """
     Get pattern https?://
@@ -73,7 +73,7 @@ async def get_tags():
     )
 
 @router.get("/v1/tags/{url_id}")
-@cache(namespace="speed", expire=10)
+@cache(expire=60)
 async def get_tag(url_id: int = Path(...)):
     """
     Get pattern https?://
