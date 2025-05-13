@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     urls: list = [
         "https://go.dev",
-        "https://www.paradigmadigital.com",
+        "https://www.python.org",
         "https://www.realpython.com",
         "https://www.lapatilla.com",
         "https://www.facebook.com",
