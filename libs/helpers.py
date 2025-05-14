@@ -1,5 +1,5 @@
 import re
-import aiohttp
+from aiohttp_client_cache import CachedSession, SQLiteBackend
 
 from conf.settings import Settings
 
@@ -31,7 +31,8 @@ async def results(url):
     :param url:
     :return:
     """
-    async with aiohttp.ClientSession() as session:
+    cache = SQLiteBackend(use_temp=True, expire_after=60)
+    async with CachedSession(cache=cache) as session:
         html = await fetch(session, url)
 
         return search_tag(html, settings.pattern)

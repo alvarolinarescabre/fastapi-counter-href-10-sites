@@ -6,5 +6,7 @@ requests
 httpx
 bs4
 aiohttp
+aiohttp-client-cache
+aiosqlite
 pytest
 
