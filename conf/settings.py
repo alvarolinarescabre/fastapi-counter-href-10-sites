@@ -7,7 +7,7 @@ class Settings(BaseSettings):
         "https://go.dev",
         "https://www.python.org",
         "https://www.realpython.com",
-        "https://www.lapatilla.com",
+        "https://www.instagram.com",
         "https://www.facebook.com",
         "https://www.gitlab.com",
         "https://www.youtube.com",

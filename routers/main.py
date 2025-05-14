@@ -1,5 +1,7 @@
 from timeit import default_timer as timer
 from fastapi import APIRouter, Path
+from starlette.responses import FileResponse
+
 from conf.settings import Settings
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
@@ -20,6 +22,12 @@ settings = Settings()
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     FastAPICache.init(InMemoryBackend())
     yield
+
+favicon_path = 'favicon.ico'  # Adjust path to file
+
+@router.get('/favicon.ico', include_in_schema=False)
+async def favicon():
+    return FileResponse(favicon_path)
 
 @router.get("/")
 @cache(expire=60)
