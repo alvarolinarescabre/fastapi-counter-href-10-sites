@@ -5,6 +5,9 @@ A high-performance web scraper that counts words within HTML tags using FastAPI 
 ## Features
 
 - Asynchronous HTTP requests with connection pooling
+- HTTP client-side caching con SQLite o memoria
+- Reintentos automáticos con backoff exponencial y jitter
+- Paralelismo ajustado automáticamente según número de CPUs
 - Optimized TCP connections with DNS caching
 - Custom request headers for better compatibility
 - Efficient regex pattern matching with pre-compilation
@@ -32,19 +35,36 @@ pip install -r requirements.txt
 Run the tests with coverage:
 
 ```bash
-pytest
+# Ejecutar todos los tests con reporte de cobertura
+pytest --cov=. --cov-report=term --cov-report=html
+
+# Ejecutar tests específicos
+pytest tests/test_helpers.py
+pytest tests/test_helpers_advanced.py  # Tests avanzados para optimizaciones
+pytest tests/test_api_advanced.py      # Tests de rendimiento de API
 ```
 
 This will generate coverage reports in both terminal and HTML formats.
+
+## Performance Testing
+
+Para evaluar el impacto de las optimizaciones, use el script de pruebas de rendimiento:
+
+```bash
+# Asegúrate de que la aplicación esté ejecutándose en localhost:8080
+python performance_test.py
+```
+
+Este script generará gráficas comparativas mostrando las mejoras de rendimiento.
 
 ## Usage
 
 The main functionality is provided through the `helpers.py` module which offers:
 
-- `get_session()`: Returns an optimized HTTP session with connection pooling
-- `fetch(session, url)`: Fetches content from a URL with error handling
-- `search_tag(data, pattern)`: Searches for words within HTML tags
-- `results(url)`: Combines the above to analyze a URL
+- `get_session()`: Returns an optimized HTTP session with connection pooling and caching
+- `fetch(session, url, max_retries=3)`: Fetches content from a URL with error handling y reintentos
+- `search_tag(data, pattern)`: Searches for words within HTML tags using optimized regex
+- `results(url)`: Combines the above to analyze a URL with caching
 - `cleanup()`: Properly closes resources when done
 
 ## Performance Optimizations
@@ -55,12 +75,14 @@ The main functionality is provided through the `helpers.py` module which offers:
 - Custom optimized headers
 - Configurable timeouts
 - Proper resource cleanup
+- Reintentos automáticos con backoff exponencial y jitter
+- Cliente HTTP con caché usando SQLite o memoria
 
 ### Processing Optimizations
-- Pre-compiled regex patterns
+- Pre-compiled regex patterns con flags IGNORECASE y DOTALL
 - Efficient list comprehensions and direct sum
 - Early returns for empty data
-- Semaphore for controlled concurrency
+- Semaphore con ajuste dinámico según CPUs disponibles
 - Proper error handling and exception management
 
 ### Caching Optimizations
@@ -68,6 +90,7 @@ The main functionality is provided through the `helpers.py` module which offers:
 - LRU-cached settings
 - Pre-defined response objects
 - Input validation with Path parameters
+- HTTP client-side caching para reducir requests repetidos
 
 ## Configuration
 
@@ -76,6 +99,8 @@ The behavior can be modified by adjusting the settings in `conf/settings.py`:
 - `cache_expire`: Cache expiration time in seconds
 - `timeout`: HTTP request timeout in seconds
 - `pattern`: Regex pattern for searching
+- `cache_backend`: Tipo de backend para caché ("sqlite" o cualquier otro valor para memoria)
+- `cache_db_path`: Ruta para SQLite si se usa como backend
 
 ## Error Handling
 
