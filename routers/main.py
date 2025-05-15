@@ -1,145 +1,141 @@
 from timeit import default_timer as timer
-from fastapi import APIRouter, Path
-from starlette.responses import FileResponse
-
-from conf.settings import Settings
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-
+import asyncio
+from functools import lru_cache
+from typing import AsyncIterator, Dict, Any
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
-from fastapi import FastAPI
+
+from fastapi import APIRouter, Path, FastAPI
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.encoders import jsonable_encoder
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
 
-from libs.helpers import results
+from libs.helpers import results, cleanup
 
 router = APIRouter()
-settings = Settings()
+
+# Use lru_cache for settings to avoid repeated loading
+@lru_cache()
+def get_settings():
+    from conf.settings import Settings
+    return Settings()
+
+settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    FastAPICache.init(InMemoryBackend())
+    # Initialize cache with optimized settings
+    FastAPICache.init(
+        InMemoryBackend(),
+        prefix="fastapi-cache",
+        expire=settings.cache_expire
+    )
     yield
+    # Cleanup resources when shutting down
+    await cleanup()
 
-favicon_path = 'favicon.ico'
+# Pre-define constant paths and responses
+FAVICON_PATH = 'favicon.ico'
+INDEX_RESPONSE = {"data": "/v1/tags | /docs | /healthcheck"}
+HEALTH_RESPONSE = {"data": "Ok!"}
+ERROR_RESPONSE = {"data": "id must be between 0 and 9"}
 
 @router.get('/favicon.ico', include_in_schema=False)
 async def favicon():
-    return FileResponse(favicon_path)
+    return FileResponse(FAVICON_PATH)
 
 @router.get("/")
 @cache(expire=60)
 async def index():
-    return JSONResponse(
-        jsonable_encoder(
-            {
-                "data": "/v1/tags | /docs | /healthcheck",
-            }
-        )
-    )
+    return JSONResponse(jsonable_encoder(INDEX_RESPONSE))
 
 @router.get("/v1/tags")
-@cache(expire=60)
+@cache(expire=120)  # Increased cache time
 async def get_tags():
     """
-    Get pattern https?://
-    :return: JSON with results
+    Get pattern https?:// for all URLs
+    
+    Returns:
+        JSONResponse: Results and timing information
     """
-
     start = timer()
-    content = []
-
-    for url_id, url in enumerate(settings.urls):
-        result = await results(url)
-
-        if result:
-            content.append(
-                {
+    
+    # Process URLs in parallel with concurrency control
+    semaphore = asyncio.Semaphore(10)  # Limit concurrent requests
+    
+    async def process_url(url_id: int, url: str) -> Dict[str, Any]:
+        """Process a single URL with concurrency control"""
+        async with semaphore:
+            try:
+                result = await results(url)
+                return {
                     "id": url_id,
                     "url": url,
-                    "result": result,
-                })
-        else:
-            content.append(
-                {
+                    "result": result if result else None,
+                }
+            except Exception as e:
+                return {
                     "id": url_id,
                     "url": url,
                     "result": None,
-                })
+                    "error": str(e)
+                }
+    
+    # Create tasks for all URLs and execute in parallel
+    tasks = [process_url(url_id, url) for url_id, url in enumerate(settings.urls)]
+    content = await asyncio.gather(*tasks)
 
     end = timer()
 
     return JSONResponse(
-        jsonable_encoder(
-            {
-                "data": content,
-                "time": end - start
-            }
-        )
+        jsonable_encoder({
+            "data": content,
+            "time": end - start
+        })
     )
 
 @router.get("/v1/tags/{url_id}")
 @cache(expire=60)
-async def get_tag(url_id: int = Path(...)):
+async def get_tag(url_id: int = Path(..., ge=0, lt=10)):
     """
-    Get pattern https?://
-    :return: JSON with results
+    Get pattern https?:// for a specific URL
+    
+    Args:
+        url_id: The index of the URL to process (0-9)
+    
+    Returns:
+        JSONResponse: Results and timing information
     """
-
     start = timer()
-    content = []
-
+    
     try:
         url = settings.urls[url_id]
         result = await results(url)
 
-        if result:
-            content.append(
-                {
-                    "id": url_id,
-                    "url": url,
-                    "result": result,
-                })
-        else:
-            content.append(
-                {
-                    "id": url_id,
-                    "url": url,
-                    "result": None,
-                })
+        content = [{
+            "id": url_id,
+            "url": url,
+            "result": result if result else None,
+        }]
 
         end = timer()
 
         return JSONResponse(
-            jsonable_encoder(
-                {
-                    "data": content,
-                    "time": end - start
-                }
-            )
+            jsonable_encoder({
+                "data": content,
+                "time": end - start
+            })
         )
     except IndexError:
-        return JSONResponse(
-            jsonable_encoder(
-                {
-                    "data": "id must be between 0 and 9",
-                }
-            )
-        )
-
+        return JSONResponse(jsonable_encoder(ERROR_RESPONSE), status_code=400)
 
 @router.get("/healthcheck")
 async def healthcheck():
     """
     Healthcheck endpoint
-    :return: JSON with success message
+    
+    Returns:
+        JSONResponse: Success message
     """
-    return  JSONResponse(
-        jsonable_encoder(
-            {
-                "data": "Ok!",
-            }
-        )
-    )
+    return JSONResponse(jsonable_encoder(HEALTH_RESPONSE))

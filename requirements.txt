@@ -5,8 +5,10 @@ uvicorn
 requests
 httpx
 bs4
-aiohttp
-aiohttp-client-cache
+aiohttp==3.9.1
+aiohttp-client-cache==0.8.2
 aiosqlite
-pytest
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
 
