@@ -23,7 +23,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     FastAPICache.init(InMemoryBackend())
     yield
 
-favicon_path = 'favicon.ico'  # Adjust path to file
+favicon_path = 'favicon.ico'
 
 @router.get('/favicon.ico', include_in_schema=False)
 async def favicon():
