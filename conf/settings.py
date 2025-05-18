@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     api_stage: str = os.environ.get("API_STAGE", "")
     cache_expire: int = 60  # Cache expiration time in seconds
     cache_backend: str = "sqlite"  # Cache backend type
-    cache_db_path: str = ":memory:"  # Path for SQLite (in memory by default)
+    cache_db_path: str = os.environ.get("CACHE_DB_PATH", ":memory:")  # Path for SQLite
     timeout: int = 10  # Timeout for HTTP requests in seconds
 
     class Config:
