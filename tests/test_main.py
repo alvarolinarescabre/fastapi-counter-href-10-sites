@@ -37,12 +37,12 @@ def test_get_tag(url_id: int) -> None:
 def test_get_tag_invalid_id() -> None:
     """Test that the get_tag endpoint returns an error for invalid URL IDs"""
     response = client.get("/v1/tags/999")  # Invalid ID
-    assert response.status_code == 422  # FastAPI devuelve 422 para validación de Path
+    assert response.status_code == 422  # FastAPI returns 422 for Path validation
 
 def test_get_tags() -> None:
     """Test that the get_tags endpoint returns results for all URLs"""
-    # Nota: No usamos patch aquí porque el mock no está funcionando correctamente
-    # para los resultados en este test específico
+    # Note: We are not using patch here because the mock is not working correctly
+    # for the results in this specific test
     
     response = client.get("/v1/tags")
     
@@ -51,11 +51,11 @@ def test_get_tags() -> None:
     assert "data" in data
     assert "time" in data
     
-    # Comprueba que tenemos resultados para cada URL
-    assert len(data["data"]) == 10  # Número de URLs definidas
+    # Check that we have results for each URL
+    assert len(data["data"]) == 10  # Number of defined URLs
     
-    # Comprueba el formato de cada respuesta
+    # Check the format of each response
     for i, item in enumerate(data["data"]):
         assert item["id"] == i
         assert "url" in item
-        assert "result" in item  # Solo verificamos que existe el campo, no su valor exacto 
+        assert "result" in item  # We only verify that the field exists, not its exact value 

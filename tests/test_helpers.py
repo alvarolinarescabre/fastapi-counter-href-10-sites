@@ -1,6 +1,6 @@
 """
-Tests optimizados para los helpers de la aplicación.
-Incluye pruebas de rendimiento y uso de memoria.
+Optimized tests for application helpers.
+Includes performance and memory usage tests.
 """
 import pytest
 import time
@@ -13,7 +13,7 @@ from libs.helpers import search_tag, fetch, results, cleanup, pattern_compiled
 
 @pytest.fixture
 async def mock_session() -> AsyncGenerator[MagicMock, None]:
-    """Fixture para proporcionar una sesión mock con tipado apropiado"""
+    """Fixture to provide a mock session with appropriate typing"""
     session = MagicMock(spec=ClientSession)
     mock_response = MagicMock(spec=ClientResponse)
     mock_context = MagicMock()
@@ -24,8 +24,8 @@ async def mock_session() -> AsyncGenerator[MagicMock, None]:
 
 @pytest.mark.asyncio
 async def test_fetch_performance():
-    """Probar el rendimiento de la función fetch"""
-    # Crear mock con respuesta realista
+    """Test the performance of the fetch function"""
+    # Create mock with realistic response
     mock_session = MagicMock(spec=ClientSession)
     mock_response = AsyncMock()
     mock_response.text.return_value = "<!DOCTYPE html><html><body><a href='http://test.com'>test</a></body></html>"
@@ -34,24 +34,24 @@ async def test_fetch_performance():
     mock_context_manager.__aenter__.return_value = mock_response
     mock_session.get.return_value = mock_context_manager
     
-    # Medir tiempo de ejecución
+    # Measure execution time
     start_time = time.time()
     result = await fetch(mock_session, "http://example.com")
     end_time = time.time()
     
-    # Verificar respuesta y rendimiento
+    # Verify response and performance
     assert result is not None
     assert len(result) > 0
     assert isinstance(result, str)
     assert "test" in result
     
-    # El tiempo debe ser pequeño para un mock
+    # The time should be small for a mock
     execution_time = end_time - start_time
     assert execution_time < 0.1
 
 
 def test_search_tag_performance():
-    """Probar el rendimiento de search_tag con diferentes tamaños de entrada"""
+    """Test the performance of search_tag with different input sizes"""
     # Caso básico
     html_small = "<a href='http://test.com'>link text</a>"
     assert search_tag(html_small) == 2
@@ -62,42 +62,42 @@ def test_search_tag_performance():
         for i in range(1000)
     ])
     
-    # Medir tiempo para procesamiento de documento grande
+    # Measure time for large document processing
     start_time = time.time()
     result = search_tag(html_large)
     end_time = time.time()
     
-    # Verificar resultado y rendimiento
+    # Verify result and performance
     assert result == 3000  # 3 palabras por enlace * 1000 enlaces
     execution_time = end_time - start_time
-    assert execution_time < 0.1  # Debe ser muy rápido incluso con 1000 enlaces
+    assert execution_time < 0.1  # Should be very fast even with 1000 links
     
-    # Probar con entrada vacía
+    # Test with empty input
     assert search_tag("") == 0
 
 
 @pytest.mark.asyncio
 async def test_results_error_handling():
-    """Probar que la función results maneja errores correctamente"""
+    """Test that the results function handles errors correctly"""
     with patch('libs.helpers.get_session') as mock_get_session:
         mock_session = MagicMock(spec=ClientSession)
         mock_get_session.return_value = mock_session
         
         with patch('libs.helpers.fetch') as mock_fetch:
-            # Simular error en fetch
+            # Simulate error in fetch
             mock_fetch.side_effect = ClientError("Test error")
             
-            # La excepción debería propagarse
+            # The exception should propagate
             with pytest.raises(ClientError):
                 await results("http://example.com")
 
 
 @pytest.mark.asyncio
 async def test_error_retry_mechanism():
-    """Probar que el mecanismo de reintento funciona correctamente"""
+    """Test that the retry mechanism works correctly"""
     mock_session = MagicMock(spec=ClientSession)
     
-    # Configurar el mock para fallar en los primeros 2 intentos y luego tener éxito
+    # Configure the mock to fail on the first 2 attempts and then succeed
     from typing import Union, Any
     side_effects: list[Union[ClientError, Any]] = [
         ClientError("Error 1"),

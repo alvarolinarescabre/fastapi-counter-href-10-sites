@@ -5,9 +5,9 @@ A high-performance web scraper that counts words within HTML tags using FastAPI 
 ## Features
 
 - Asynchronous HTTP requests with connection pooling
-- HTTP client-side caching con SQLite o memoria
-- Reintentos automáticos con backoff exponencial y jitter
-- Paralelismo ajustado automáticamente según número de CPUs
+- HTTP client-side caching with SQLite or memory
+- Automatic retries with exponential backoff and jitter
+- Parallelism automatically adjusted according to number of CPUs
 - Optimized TCP connections with DNS caching
 - Custom request headers for better compatibility
 - Efficient regex pattern matching with pre-compilation
@@ -35,20 +35,20 @@ pip install -r requirements.txt
 Run the tests with coverage:
 
 ```bash
-# Ejecutar todos los tests con reporte de cobertura
+# Run all tests with coverage report
 pytest --cov=. --cov-report=term --cov-report=html
 
-# Ejecutar tests específicos
+# Run specific tests
 pytest tests/test_helpers.py
-pytest tests/test_helpers_advanced.py  # Tests avanzados para optimizaciones
-pytest tests/test_api_advanced.py      # Tests de rendimiento de API
+pytest tests/test_helpers_advanced.py  # Advanced tests for optimizations
+pytest tests/test_api_advanced.py      # API performance tests
 ```
 
 This will generate coverage reports in both terminal and HTML formats.
 
 ## Performance Testing
 
-Para evaluar el impacto de las optimizaciones, use el script de pruebas de rendimiento:
+To evaluate the impact of the optimizations, use the performance testing script:
 
 ```bash
 # Asegúrate de que la aplicación esté ejecutándose en localhost:8080

@@ -1,8 +1,8 @@
 """
-Script de pruebas de rendimiento para medir el impacto de las optimizaciones.
+Performance testing script to measure the impact of optimizations.
 
-Este script ejecuta una serie de pruebas de rendimiento contra la API
-y muestra estadísticas comparativas para medir la mejora.
+This script executes a series of performance tests against the API
+and displays comparative statistics to measure improvement.
 """
 import asyncio
 import time
@@ -13,40 +13,40 @@ import numpy as np
 import logging
 from typing import Dict, List, Any, Tuple
 
-# Configurar logging
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# URL base para pruebas - ajustar según la configuración
-BASE_URL = "http://localhost:8000"  # Puerto estándar para FastAPI
+# Base URL for tests - adjust according to configuration
+BASE_URL = "http://localhost:8000"  # Standard port for FastAPI
 
 async def measure_endpoint_performance(
     session: aiohttp.ClientSession, 
     endpoint: str, 
     iterations: int = 50
 ) -> Dict[str, Any]:
-    """Mide el tiempo de respuesta de un endpoint específico"""
+    """Measures the response time of a specific endpoint"""
     response_times: List[float] = []
     
-    # Para pruebas sin servidor activo - simular tiempos de respuesta
+    # For tests without an active server - simulate response times
     for i in range(iterations):
         start_time = time.time()
         
-        # Simulación de tiempo de respuesta según el endpoint
+        # Response time simulation according to endpoint
         if "tags/0" in endpoint:
-            await asyncio.sleep(0.05)  # Simulación para un solo tag
+            await asyncio.sleep(0.05)  # Simulation for a single tag
         elif "tags" in endpoint:
-            await asyncio.sleep(0.15)  # Simulación para todos los tags
+            await asyncio.sleep(0.15)  # Simulation for all tags
         else:
-            await asyncio.sleep(0.01)  # Simulación para otros endpoints
+            await asyncio.sleep(0.01)  # Simulation for other endpoints
             
         end_time = time.time()
         response_times.append(end_time - start_time)
         
-        # Pequeña pausa entre peticiones
+        # Small pause between requests
         await asyncio.sleep(0.01)
     
     return {
@@ -69,25 +69,25 @@ async def test_concurrent_requests(
     """Prueba el rendimiento con peticiones concurrentes"""
     results: List[float] = []
     
-    # Crear semáforo para limitar concurrencia
+    # Create semaphore to limit concurrency
     sem = asyncio.Semaphore(concurrency)
     
     async def fetch_with_timing() -> None:
         async with sem:
             start_time = time.time()
             
-            # Simulación de tiempo de respuesta según el endpoint
+            # Response time simulation according to endpoint
             if "tags/0" in endpoint:
-                await asyncio.sleep(0.05)  # Simulación para un solo tag
+                await asyncio.sleep(0.05)  # Simulation for a single tag
             elif "tags" in endpoint:
-                await asyncio.sleep(0.15)  # Simulación para todos los tags
+                await asyncio.sleep(0.15)  # Simulation for all tags
             else:
-                await asyncio.sleep(0.01)  # Simulación para otros endpoints
+                await asyncio.sleep(0.01)  # Simulation for other endpoints
             
             end_time = time.time()
             results.append(end_time - start_time)
     
-    # Crear y ejecutar todas las tareas concurrentes
+    # Create and execute all concurrent tasks
     tasks = [fetch_with_timing() for _ in range(total_requests)]
     await asyncio.gather(*tasks)
     
@@ -108,10 +108,10 @@ def plot_comparison(
     before: Dict[str, float], 
     after: Dict[str, float]
 ) -> List[float]:
-    """Genera una gráfica comparando rendimiento antes y después"""
+    """Generates a graph comparing performance before and after"""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
     
-    # Gráfica de barras para tiempos promedios
+    # Bar chart for average times
     metrics = ["min", "avg", "median", "p95", "max"]
     before_data = [before[m] for m in metrics]
     after_data = [after[m] for m in metrics]
@@ -119,23 +119,23 @@ def plot_comparison(
     x = np.arange(len(metrics))
     width = 0.35
     
-    ax1.bar(x - width/2, before_data, width, label='Antes')
-    ax1.bar(x + width/2, after_data, width, label='Después')
+    ax1.bar(x - width/2, before_data, width, label='Before')
+    ax1.bar(x + width/2, after_data, width, label='After')
     
-    ax1.set_title(f'Comparación de tiempos - {title}')
+    ax1.set_title(f'Time Comparison - {title}')
     ax1.set_xticks(x)
     ax1.set_xticklabels(metrics)
     ax1.legend()
-    ax1.set_ylabel('Tiempo (segundos)')
+    ax1.set_ylabel('Time (seconds)')
     
-    # Mejora porcentual
+    # Percentage improvement
     improvements = [(before[m] - after[m]) / before[m] * 100 for m in metrics]
     
-    ax2.bar(x, improvements, width, label='Mejora %')
-    ax2.set_title('Mejora porcentual')
+    ax2.bar(x, improvements, width, label='Improvement %')
+    ax2.set_title('Percentage Improvement')
     ax2.set_xticks(x)
     ax2.set_xticklabels(metrics)
-    ax2.set_ylabel('Mejora (%)')
+    ax2.set_ylabel('Improvement (%)')
     
     plt.tight_layout()
     fig.savefig(f'performance_{title.replace(" ", "_")}.png')
@@ -143,36 +143,36 @@ def plot_comparison(
     return improvements
 
 async def main() -> None:
-    # Configuración para pruebas
+    # Configuration for tests
     endpoints: Dict[str, str] = {
         "index": "",
         "single_tag": "v1/tags/0",
         "all_tags": "v1/tags",
     }
     
-    results_before: Dict[str, Dict[str, float]] = {}  # Simulación de resultados antes
+    results_before: Dict[str, Dict[str, float]] = {}  # Simulation of results before
     results_after: Dict[str, Dict[str, Any]] = {}
     
-    # Crear sesión HTTP
+    # Create HTTP session
     async with aiohttp.ClientSession() as session:
-        # Medir rendimiento actual
-        print("Midiendo rendimiento actual...")
+        # Measure current performance
+        print("Measuring current performance...")
         
         for name, endpoint in endpoints.items():
-            print(f"Probando endpoint: {endpoint}")
-            # Para peticiones simples
+            print(f"Testing endpoint: {endpoint}")
+            # For simple requests
             results = await measure_endpoint_performance(session, endpoint, iterations=30)
             results_after[f"{name}_sequential"] = results
-            print(f"  Tiempo promedio: {results['avg']:.4f}s")
+            print(f"  Average time: {results['avg']:.4f}s")
             
-            # Para peticiones concurrentes (solo en endpoints ligeros)
-            if name != "all_tags":  # No saturar el endpoint pesado
+            # For concurrent requests (only for light endpoints)
+            if name != "all_tags":  # Don't saturate the heavy endpoint
                 results = await test_concurrent_requests(session, endpoint, concurrency=10, total_requests=50)
                 results_after[f"{name}_concurrent"] = results
-                print(f"  Tiempo promedio concurrente: {results['avg']:.4f}s")
+                print(f"  Average concurrent time: {results['avg']:.4f}s")
     
-    # Comparar con resultados ficticios para demostración (sustituir con datos reales)
-    # En un caso real, guardaríamos los resultados antes de optimizar y los compararíamos después
+    # Compare with fictional results for demonstration (replace with real data)
+    # In a real case, we would save the results before optimizing and compare them after
     results_before = {
         "index_sequential": {"min": 0.010, "max": 0.050, "avg": 0.025, "median": 0.020, "p95": 0.040},
         "index_concurrent": {"min": 0.015, "max": 0.070, "avg": 0.035, "median": 0.030, "p95": 0.065},
@@ -181,31 +181,31 @@ async def main() -> None:
         "all_tags_sequential": {"min": 1.000, "max": 2.000, "avg": 1.500, "median": 1.400, "p95": 1.900},
     }
     
-    # Mostrar comparación para endpoints donde tenemos datos simulados "antes"
+    # Show comparison for endpoints where we have "before" simulated data
     for key in results_before.keys():
         if key in results_after:
-            print(f"\nAnálisis comparativo para {key}:")
+            print(f"\nComparative analysis for {key}:")
             before = results_before[key]
             after = results_after[key]
             
-            # Mostrar mejoras
+            # Show improvements
             for metric in ["min", "avg", "median", "p95", "max"]:
                 if metric in before and metric in after:
                     improvement = (before[metric] - after[metric]) / before[metric] * 100
-                    print(f"  {metric}: {before[metric]:.4f}s -> {after[metric]:.4f}s ({improvement:.1f}% mejora)")
+                    print(f"  {metric}: {before[metric]:.4f}s -> {after[metric]:.4f}s ({improvement:.1f}% improvement)")
             
-            # Generar gráfica
+            # Generate graph
             try:
                 improvements = plot_comparison(key, before, after)
                 pos_improvements = [imp for imp in improvements if imp > 0]
-                if pos_improvements:  # Si hay mejoras positivas
+                if pos_improvements:  # If there are positive improvements
                     avg_improvement = statistics.mean(pos_improvements)
-                    print(f"  Mejora promedio: {avg_improvement:.1f}%")
+                    print(f"  Average improvement: {avg_improvement:.1f}%")
                 else:
-                    print("  No se detectaron mejoras positivas")
+                    print("  No positive improvements detected")
             except Exception as e:
-                print(f"  Error generando gráfica: {e}")
+                print(f"  Error generating graph: {e}")
 
 if __name__ == "__main__":
-    print("Iniciando pruebas de rendimiento...")
+    print("Starting performance tests...")
     asyncio.run(main())

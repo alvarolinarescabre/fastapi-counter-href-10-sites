@@ -9,7 +9,7 @@ class Settings(BaseSettings):
         "https://go.dev",
         "https://www.python.org",
         "https://www.realpython.com",
-        "https://www.instagram.com",
+        "https://nodejs.org",
         "https://www.facebook.com",
         "https://www.gitlab.com",
         "https://www.youtube.com",
@@ -19,10 +19,10 @@ class Settings(BaseSettings):
     ]
     pattern: str = r"href=\"(http|https)://"
     api_stage: str = os.environ.get("API_STAGE", "")
-    cache_expire: int = 60  # Tiempo de caducidad de la caché en segundos
-    cache_backend: str = "sqlite"  # Tipo de backend para la caché
-    cache_db_path: str = ":memory:"  # Ruta para SQLite (en memoria por defecto)
-    timeout: int = 10  # Timeout para las solicitudes HTTP en segundos
+    cache_expire: int = 60  # Cache expiration time in seconds
+    cache_backend: str = "sqlite"  # Cache backend type
+    cache_db_path: str = ":memory:"  # Path for SQLite (in memory by default)
+    timeout: int = 10  # Timeout for HTTP requests in seconds
 
     class Config:
         env_file = ".env"
@@ -32,6 +32,6 @@ class Settings(BaseSettings):
 @lru_cache()
 def get_settings() -> Settings:
     """
-    Devuelve una instancia cacheada de la configuración
+    Returns a cached instance of the settings
     """
     return Settings()

@@ -9,13 +9,13 @@ import asyncio
 
 from conf.settings import get_settings
 
-# Configurar logger
+# Configure logger
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
-# Pre-compile regex pattern for better performance - usando flags para optimización
+# Pre-compile regex pattern for better performance - using flags for optimization
 pattern_compiled = re.compile(r'<a\s+[^>]*href\s*=\s*["\'](?:http|https)://[^"\']*["\'][^>]*>(.*?)</a>', re.IGNORECASE | re.DOTALL)
 
 # Performance constants
@@ -41,22 +41,22 @@ async def get_session() -> ClientSession:
     global _session
     async with _session_lock:
         if _session is None or _session.closed:
-            # Optimización: Usar un conector TCP personalizado para todas las sesiones
+            # Optimization: Use a custom TCP connector for all sessions
             connector = TCPConnector(
-                limit=200,         # Aumentado el límite de conexiones simultáneas
-                ttl_dns_cache=600, # Aumentado TTL del caché DNS para reducir las búsquedas
-                ssl=False,         # Disable SSL para conexiones más rápidas si no se necesita
-                use_dns_cache=True,# Usar caché DNS
-                force_close=False, # Permitir reutilizar conexiones
+                limit=200,         # Increased limit of simultaneous connections
+                ttl_dns_cache=600, # Increased DNS cache TTL to reduce lookups
+                ssl=False,         # Disable SSL for faster connections if not needed
+                use_dns_cache=True,# Use DNS cache
+                force_close=False, # Allow connection reuse
             )
             
-            # Usar un backend de caché en SQLite si está configurado así, de lo contrario en memoria
+            # Use a SQLite cache backend if configured that way, otherwise in memory
             if settings.cache_backend == "sqlite":
                 cache_backend = SQLiteBackend(
                     cache_name=settings.cache_db_path,
                     expire_after=CACHE_TTL,
-                    allowed_methods=('GET', 'HEAD'), # Solo cachear GET y HEAD
-                    allowed_codes=(200,),           # Solo cachear respuestas 200
+                    allowed_methods=('GET', 'HEAD'), # Only cache GET and HEAD
+                    allowed_codes=(200,),           # Only cache 200 responses
                 )
                 _session = CachedSession(
                     cache=cache_backend,
@@ -66,7 +66,7 @@ async def get_session() -> ClientSession:
                     connector=connector
                 )
             else:
-                # Fallback a sesión normal si hay problemas con la caché
+                # Fallback to normal session if there are issues with the cache
                 _session = ClientSession(
                     timeout=TIMEOUT,
                     headers=REQUEST_HEADERS,
@@ -130,16 +130,16 @@ def search_tag(data: str, pattern: Optional[str] = None) -> int:
     
     # Use provided pattern or default pattern
     if pattern:
-        # Para patrones personalizados, usar re.compile para mejor rendimiento
+        # For custom patterns, use re.compile for better performance
         compiled_pattern = re.compile(pattern, re.IGNORECASE | re.DOTALL)
         a_tags = compiled_pattern.findall(data)
     else:
-        # Usar el patrón precompilado para mejor rendimiento
-        # Extraer contenido de texto entre etiquetas <a> con href
+        # Use the precompiled pattern for better performance
+        # Extract text content between <a> tags with href
         a_tags = pattern_compiled.findall(data)
     
-    # Versión optimizada: usa comprensión de listas para contar palabras
-    # Esto es más rápido que el bucle for con condición if
+    # Optimized version: uses list comprehension to count words
+    # This is faster than a for loop with if condition
     return sum(len(tag.split()) for tag in a_tags if tag)
 
 async def results(url: str) -> int:

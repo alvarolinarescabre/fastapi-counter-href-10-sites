@@ -14,7 +14,7 @@ from fastapi_cache.decorator import cache
 
 from libs.helpers import results, cleanup
 
-# Define un tipo para los elementos de respuesta para mayor claridad y prevenir errores de tipado
+# Define a type for response elements for better clarity and to prevent typing errors
 ResultItem = Dict[str, Any]
 
 router = APIRouter()
@@ -55,7 +55,7 @@ async def index():
     return JSONResponse(jsonable_encoder(INDEX_RESPONSE))
 
 @router.get("/v1/tags")
-@cache(expire=300)  # Aumentado tiempo de caché a 5 minutos para mejorar rendimiento
+@cache(expire=300)  # Increased cache time to 5 minutes to improve performance
 async def get_tags():
     """
     Get pattern https?:// for all URLs
@@ -66,11 +66,11 @@ async def get_tags():
     start = timer()
     
     # Process URLs in parallel with optimized concurrency control
-    # Ajustar semáforo según número de CPUs disponibles y carga del sistema
+    # Adjust semaphore based on available CPUs and system load
     cpu_count = max(os.cpu_count() or 2, 2)
-    # Optimización: Limitar concurrencia según tipo de URLs y capacidad del sistema
-    # Para APIs externas, aumentamos un poco el límite para compensar latencia
-    semaphore = asyncio.Semaphore(min(cpu_count * 3, 30))  # Balance optimizado
+    # Optimization: Limit concurrency based on URL types and system capacity
+    # For external APIs, we increase the limit slightly to compensate for latency
+    semaphore = asyncio.Semaphore(min(cpu_count * 3, 30))  # Optimized balance
     
     async def process_url(url_id: int, url: str) -> ResultItem:
         """Process a single URL with concurrency control"""
@@ -93,7 +93,7 @@ async def get_tags():
     # Create tasks for all URLs and execute in parallel
     tasks = [process_url(url_id, url) for url_id, url in enumerate(settings.urls)]
     
-    # Especificar return_exceptions=True para manejar errores sin detener el proceso completo
+    # Specify return_exceptions=True to handle errors without stopping the entire process
     content: list[ResultItem] = await asyncio.gather(*tasks, return_exceptions=False)
 
     end = timer()
@@ -106,7 +106,7 @@ async def get_tags():
     )
 
 @router.get("/v1/tags/{url_id}")
-@cache(expire=300)  # Aumentado tiempo de caché a 5 minutos para mejor rendimiento
+@cache(expire=300)  # Increased cache time to 5 minutes for better performance
 async def get_tag(url_id: int = Path(..., ge=0, lt=10)):
     """
     Get pattern https?:// for a specific URL

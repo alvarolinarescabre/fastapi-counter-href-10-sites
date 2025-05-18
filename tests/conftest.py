@@ -7,7 +7,7 @@ from unittest.mock import patch
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 
-# Configuración para poder usar async en pruebas
+# Configuration to use async in tests
 @pytest.fixture(scope="session")
 def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     """Create an instance of the default event loop for each test case."""
@@ -16,23 +16,23 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     yield loop
     loop.close()
 
-# Configurar logging para las pruebas - reducir ruido de logs durante la ejecución
+# Configure logging for tests - reduce log noise during execution
 @pytest.fixture(autouse=True)
 def configure_logging():
-    """Configurar logging para pruebas - reducir salida innecesaria"""
+    """Configure logging for tests - reduce unnecessary output"""
     logging.basicConfig(level=logging.ERROR)
     
-    # También suprimir advertencias específicas para mejorar la legibilidad
+    # Also suppress specific warnings to improve readability
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     
     return None
 
-# Mock para los ajustes para evitar leer archivos de configuración reales
+# Mock for settings to avoid reading real configuration files
 @pytest.fixture(autouse=True)
 def mock_settings() -> Generator[None, None, None]:
     """Mock the settings to use test values."""
     with patch("conf.settings.Settings") as mock_settings:
-        # Configurar valores predeterminados para pruebas
+        # Configure default values for tests
         mock_settings.return_value.urls = [
             "https://test1.com",
             "https://test2.com",
@@ -50,7 +50,7 @@ def mock_settings() -> Generator[None, None, None]:
         mock_settings.return_value.timeout = 5
         yield
         
-# Inicializar FastAPICache para pruebas
+# Initialize FastAPICache for tests
 @pytest.fixture(autouse=True)
 def init_fastapi_cache():
     """Initialize FastAPICache for testing."""
