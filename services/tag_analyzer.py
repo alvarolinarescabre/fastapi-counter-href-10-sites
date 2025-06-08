@@ -1,4 +1,5 @@
 import re
+import os
 from typing import List, Dict, Any, Protocol, Optional
 import asyncio
 
@@ -55,7 +56,8 @@ class HrefTagAnalyzer:
     async def analyze_all_urls(self) -> List[TagResult]:
         """Analyzes all configured URLs and returns results"""
         # Create semaphore for concurrency control
-        semaphore = asyncio.Semaphore(min(len(self._settings.urls), asyncio.get_event_loop().get_default_executor()._max_workers or 4))
+        max_workers = os.cpu_count() or 4  # Use CPU count as a reasonable default
+        semaphore = asyncio.Semaphore(min(len(self._settings.urls), max_workers))
 
         async def process_url(url_id: int, url: str) -> TagResult:
             async with semaphore:

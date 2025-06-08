@@ -19,9 +19,10 @@ settings = get_settings()
 
 # Constants for common responses
 RESPONSES = {
-    'index': IndexResponse(data="/v1/tags | /docs | /healthcheck"),
+    'index': IndexResponse(data="/v1/tags | /docs | /healthcheck | /v1/cache/clear"),
     'health': HealthResponse(),
-    'error': ErrorResponse(data="id must be between 0 and 9")
+    'error': ErrorResponse(data="id must be between 0 and 9"),
+    'cache_cleared': ErrorResponse(data="Cache has been cleared successfully")
 }
 
 @asynccontextmanager
@@ -90,3 +91,14 @@ async def get_tags(
     )
 
     return JSONResponse(response.dict())
+
+@router.get("/v1/cache/clear", response_model=ErrorResponse)
+async def clear_cache() -> JSONResponse:
+    """Clear the application cache"""
+    # Reset the cache by reinitializing it
+    FastAPICache.init(
+        InMemoryBackend(),
+        prefix="fastapi-cache",
+        expire=settings.cache_expire
+    )
+    return JSONResponse(RESPONSES['cache_cleared'].model_dump_json())
