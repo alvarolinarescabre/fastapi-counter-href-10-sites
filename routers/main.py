@@ -1,104 +1,92 @@
-import asyncio
-import os
 from timeit import default_timer as timer
-from typing import AsyncIterator, Dict, Any
+from typing import AsyncIterator
 from contextlib import asynccontextmanager
-from functools import lru_cache
 
-from fastapi import APIRouter, Path, FastAPI
+from fastapi import APIRouter, Path, FastAPI, Depends
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
 
-from libs.helpers import results, cleanup
-
-# Type aliases
-ResultItem = Dict[str, Any]
+from conf.settings import get_settings
+from models.schemas import TagResult, TagsResponse, HealthResponse, IndexResponse, ErrorResponse
+from services.tag_analyzer import get_tag_analyzer_service, TagAnalyzerService
+from repositories.web_repository import get_web_repository
 
 # Router and settings
 router = APIRouter()
-
-@lru_cache()
-def get_settings():
-    from conf.settings import Settings
-    return Settings()
-
 settings = get_settings()
 
-# Constants for responses
+# Constants for common responses
 RESPONSES = {
-    'index': {"data": "/v1/tags | /docs | /healthcheck"},
-    'health': {"data": "Ok!"},
-    'error': {"data": "id must be between 0 and 9"}
+    'index': IndexResponse(data="/v1/tags | /docs | /healthcheck"),
+    'health': HealthResponse(),
+    'error': ErrorResponse(data="id must be between 0 and 9")
 }
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    """Application lifespan with cache initialization and cleanup"""
+    """Application lifecycle with cache initialization and cleanup"""
+    # Initialize cache
     FastAPICache.init(
         InMemoryBackend(),
-        prefix="fastapi-cache", 
+        prefix="fastapi-cache",
         expire=settings.cache_expire
     )
     yield
-    await cleanup()
+    # Clean up resources at the end
+    await get_web_repository().cleanup()
 
-@router.get("/")
+@router.get("/", response_model=IndexResponse)
 async def index() -> JSONResponse:
-    """Index endpoint with navigation info"""
-    return JSONResponse(RESPONSES['index'])
+    """Main endpoint with navigation information"""
+    return JSONResponse(RESPONSES['index'].dict())
 
-@router.get("/healthcheck")
+@router.get("/healthcheck", response_model=HealthResponse)
 async def healthcheck() -> JSONResponse:
     """Health check endpoint"""
-    return JSONResponse(RESPONSES['health'])
+    return JSONResponse(RESPONSES['health'].dict())
 
 @router.get("/favicon.ico")
 async def favicon() -> FileResponse:
-    """Serve favicon"""
+    """Serve the favicon"""
     return FileResponse('favicon.ico')
 
-@router.get("/v1/tags/{url_id}")
+@router.get("/v1/tags/{url_id}", response_model=TagResult)
 @cache(expire=settings.cache_expire)
-async def get_tag(url_id: int = Path(..., ge=0, le=9)) -> JSONResponse:
+async def get_tag(
+    url_id: int = Path(..., ge=0, le=9),
+    service: TagAnalyzerService = Depends(get_tag_analyzer_service)
+) -> JSONResponse:
     """Get href count for a specific URL by ID"""
     if not (0 <= url_id <= 9):
-        return JSONResponse(RESPONSES['error'], status_code=422)
-    
-    start = timer()
-    count = await results(settings.urls[url_id])
-    end = timer()
-    
-    return JSONResponse({
-        "url_id": url_id,
-        "url": settings.urls[url_id],
-        "count": count,
-        "time": round(end - start, 4)
-    })
+        return JSONResponse(RESPONSES['error'].dict(), status_code=422)
 
-@router.get("/v1/tags")
+    start = timer()
+    result = await service.analyze_url(settings.urls[url_id], url_id)
+    end = timer()
+
+    response_data = result.dict()
+    response_data['time'] = round(end - start, 4)
+
+    return JSONResponse(response_data)
+
+@router.get("/v1/tags", response_model=TagsResponse)
 @cache(expire=settings.cache_expire)
-async def get_tags() -> JSONResponse:
+async def get_tags(
+    service: TagAnalyzerService = Depends(get_tag_analyzer_service)
+) -> JSONResponse:
     """Get href count for all URLs with parallel processing"""
     start = timer()
-    
-    # Create semaphore for concurrency control
-    semaphore = asyncio.Semaphore(min(len(settings.urls), os.cpu_count() or 4))
-    
-    async def process_url(url_id: int, url: str) -> ResultItem:
-        async with semaphore:
-            count = await results(url)
-            return {"url_id": url_id, "url": url, "count": count}
-    
-    # Process all URLs concurrently
-    tasks = [process_url(i, url) for i, url in enumerate(settings.urls)]
-    data = await asyncio.gather(*tasks)
-    
+
+    results = await service.analyze_all_urls()
+
     end = timer()
-    
-    return JSONResponse({
-        "data": data,
-        "total_time": round(end - start, 4),
-        "urls_processed": len(data)
-    })
+
+    response = TagsResponse(
+        data=results,
+        total_time=round(end - start, 4),
+        urls_processed=len(results)
+    )
+
+    return JSONResponse(response.dict())
