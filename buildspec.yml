@@ -6,7 +6,7 @@ env:
     ECR_REPOSITORY: "fastapi-counter-href"
 
 phases:
-  install:SSS
+  install:
     commands:
       - echo "Instalando Docker..."
       - yum install -y docker || amazon-linux-extras install docker -y
