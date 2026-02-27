@@ -4,9 +4,6 @@ env:
   variables:
     AWS_REGION: "eu-west-1"
     ECR_REPOSITORY: "fastapi-counter-href"
-    CODEARTIFACT_DOMAIN: "chamo-demo"
-    CODEARTIFACT_DOMAIN_OWNER: "312910855403"
-    CODEARTIFACT_REPOSITORY: "chamo-demo-artifact"
 
 phases:
   install:
@@ -21,14 +18,11 @@ phases:
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:-latest}
-      - echo "Obteniendo token de CodeArtifact..."
-      - CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain $CODEARTIFACT_DOMAIN --domain-owner $CODEARTIFACT_DOMAIN_OWNER --query authorizationToken --output text)
-      - PIP_INDEX_URL="https://aws:${CODEARTIFACT_AUTH_TOKEN}@${CODEARTIFACT_DOMAIN}-${CODEARTIFACT_DOMAIN_OWNER}.d.codeartifact.${AWS_REGION}.amazonaws.com/pypi/${CODEARTIFACT_REPOSITORY}/simple/"
 
   build:
     commands:
       - echo "Construyendo imagen Docker..."
-      - docker build --build-arg PIP_INDEX_URL="${PIP_INDEX_URL}" -t ${ECR_REPOSITORY}:${IMAGE_TAG} .
+      - docker build -t ${ECR_REPOSITORY}:${IMAGE_TAG} .
       - docker tag ${ECR_REPOSITORY}:${IMAGE_TAG} ${ECR_URI}:${IMAGE_TAG}
       - docker tag ${ECR_REPOSITORY}:${IMAGE_TAG} ${ECR_URI}:latest
 
