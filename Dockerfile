@@ -23,6 +23,10 @@ RUN apk add --no-cache --virtual .build-deps \
     zlib-dev \
     libjpeg
 
+# CodeArtifact pip index URL (passed as build arg)
+ARG PIP_INDEX_URL
+ENV PIP_INDEX_URL=${PIP_INDEX_URL}
+
 # Copy and installation of dependencies
 COPY requirements.txt /code/
 RUN pip install --no-cache-dir --upgrade pip && \
