@@ -6,9 +6,13 @@ env:
     ECR_REPOSITORY: "fastapi-counter-href"
 
 phases:
-  install:
-    runtime-versions:
-      docker: 24
+  install:SSS
+    commands:
+      - echo "Instalando Docker..."
+      - yum install -y docker || amazon-linux-extras install docker -y
+      - dockerd &
+      - timeout 30 sh -c 'until docker info >/dev/null 2>&1; do sleep 1; done'
+      - docker --version
 
   pre_build:
     commands:
