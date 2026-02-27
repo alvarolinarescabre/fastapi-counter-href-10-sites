@@ -1,0 +1,33 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: "eu-west-1"
+    ECR_REPOSITORY: "fastapi-counter-href"
+
+phases:
+  install:
+    runtime-versions:
+      docker: 24
+
+  pre_build:
+    commands:
+      - echo "Autenticando en ECR..."
+      - AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - ECR_URI="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}"
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:-latest}
+
+  build:
+    commands:
+      - echo "Construyendo imagen Docker..."
+      - docker build -t ${ECR_REPOSITORY}:${IMAGE_TAG} .
+      - docker tag ${ECR_REPOSITORY}:${IMAGE_TAG} ${ECR_URI}:${IMAGE_TAG}
+      - docker tag ${ECR_REPOSITORY}:${IMAGE_TAG} ${ECR_URI}:latest
+
+  post_build:
+    commands:
+      - echo "Subiendo imagen a ECR..."
+      - docker push ${ECR_URI}:${IMAGE_TAG}
+      - docker push ${ECR_URI}:latest
